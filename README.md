@@ -1,3 +1,5 @@
+[English](README_EN.md) | 中文
+
 # RWA 代币化实验项目（RWAToken）
 
 把一份"现实世界资产收益权"搬上链的最小实验：**一份 ERC-20 合约 + 全套测试 + 测试网部署脚本**。
@@ -14,18 +16,26 @@
 
 一句话：**合约是账本，资产在链下，托管人是连接两者的信任锚**。这也是所有 RWA 项目绕不开的三件套。
 
+## 合约速览（contracts/RWAToken.sol）
+
+- 基于 OpenZeppelin ERC-20 + Ownable，Solidity 0.8.20
+- `mint(to, amount)`：仅托管人可调用，且 `totalSupply + amount <= maxSupply`
+- 白名单合规：在 `_update` 钩子中拦截非白名单地址之间的转账（mint/burn 不受限）
+- `setTransfersRestricted(false)`：关闭限制后退化为普通 ERC-20
+- `redeem(amount)`：持有人销毁 token 并触发 `Redeemed` 事件，托管人链下结算
+
 ## 快速开始
 
 ```bash
 npm install
 npx hardhat compile
-npx hardhat test        # 6 个测试，覆盖增发上限/白名单/赎回
+npx hardhat test        # 5 个测试，覆盖增发上限 / 白名单 / 赎回
 ```
 
 ## 部署到 Sepolia 测试网
 
 1. 复制 `.env.example` 为 `.env`，填入：
-   - `SEPOLIA_RPC_URL`：Alchemy/Infura 的 Sepolia endpoint（免费）
+   - `SEPOLIA_RPC_URL`：Alchemy / Infura 的 Sepolia endpoint（免费）
    - `DEPLOYER_PRIVATE_KEY`：**专门新建的测试钱包私钥，里面只放测试币**
 2. 领测试 ETH：[sepoliafaucet.com](https://sepoliafaucet.com)
 3. 部署：`npx hardhat run scripts/deploy.js --network sepolia`
