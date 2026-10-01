@@ -1,57 +1,58 @@
-[English](README_EN.md) | 中文
+[中文](README_CN.md) | English
 
-# RWA 代币化实验项目（RWAToken）
+# RWA Tokenization Lab (RWAToken)
 
-把一份"现实世界资产收益权"搬上链的最小实验：**一份 ERC-20 合约 + 全套测试 + 测试网部署脚本**。
+A minimal experiment in bringing a real-world asset's revenue rights on-chain:
+**one ERC-20 contract + full test suite + testnet deployment script**.
 
-## 现实映射（RWA 到底在解决什么）
+## Real-World Mapping (What RWA Actually Solves)
 
-| 现实世界 | 合约里的对应物 |
+| Real world | On-chain counterpart |
 |---|---|
-| 一间商铺 / 一批设备 / 一笔应收账款 | `assetURI` 指向的资产档案（评估报告、托管证明） |
-| 资产拆成 N 份收益权 | `maxSupply` = N，1 token = 1 份 |
-| 托管机构持有实物资产 | `owner`（托管人），只有它能 `mint` |
-| 合格投资人才能买卖 | `allowlisted` 白名单 + `transfersRestricted` 开关 |
-| 投资人退出、拿回钱 | `redeem()` 销毁 token，链下结算 |
+| A shop / a batch of equipment / a receivable | The asset dossier behind `assetURI` (valuation report, custody proof) |
+| Asset split into N revenue shares | `maxSupply` = N, 1 token = 1 share |
+| Custodian holding the physical asset | `owner` (the custodian) — only it can `mint` |
+| Only qualified investors may trade | `allowlisted` allowlist + `transfersRestricted` switch |
+| Investor exits and gets paid | `redeem()` burns tokens, settlement happens off-chain |
 
-一句话：**合约是账本，资产在链下，托管人是连接两者的信任锚**。这也是所有 RWA 项目绕不开的三件套。
+In one sentence: **the contract is the ledger, the asset lives off-chain, and the custodian is the trust anchor connecting the two** — the unavoidable trio of every RWA project.
 
-## 合约速览（contracts/RWAToken.sol）
+## Contract Overview (contracts/RWAToken.sol)
 
-- 基于 OpenZeppelin ERC-20 + Ownable，Solidity 0.8.20
-- `mint(to, amount)`：仅托管人可调用，且 `totalSupply + amount <= maxSupply`
-- 白名单合规：在 `_update` 钩子中拦截非白名单地址之间的转账（mint/burn 不受限）
-- `setTransfersRestricted(false)`：关闭限制后退化为普通 ERC-20
-- `redeem(amount)`：持有人销毁 token 并触发 `Redeemed` 事件，托管人链下结算
+- Built on OpenZeppelin ERC-20 + Ownable, Solidity 0.8.20
+- `mint(to, amount)`: custodian-only, requires `totalSupply + amount <= maxSupply`
+- Allowlist compliance: the `_update` hook blocks transfers between non-allowlisted addresses (mint/burn exempt)
+- `setTransfersRestricted(false)`: degrades to a plain ERC-20 when restrictions are off
+- `redeem(amount)`: holder burns tokens and emits a `Redeemed` event; the custodian settles off-chain
 
-## 快速开始
+## Quick Start
 
 ```bash
 npm install
 npx hardhat compile
-npx hardhat test        # 5 个测试，覆盖增发上限 / 白名单 / 赎回
+npx hardhat test        # 5 tests covering mint cap / allowlist / redemption
 ```
 
-## 部署到 Sepolia 测试网
+## Deploy to Sepolia Testnet
 
-1. 复制 `.env.example` 为 `.env`，填入：
-   - `SEPOLIA_RPC_URL`：Alchemy / Infura 的 Sepolia endpoint（免费）
-   - `DEPLOYER_PRIVATE_KEY`：**专门新建的测试钱包私钥，里面只放测试币**
-2. 领测试 ETH：[sepoliafaucet.com](https://sepoliafaucet.com)
-3. 部署：`npx hardhat run scripts/deploy.js --network sepolia`
+1. Copy `.env.example` to `.env` and fill in:
+   - `SEPOLIA_RPC_URL`: a Sepolia endpoint from Alchemy / Infura (free)
+   - `DEPLOYER_PRIVATE_KEY`: **a fresh test-wallet key holding only testnet ETH**
+2. Get test ETH: [sepoliafaucet.com](https://sepoliafaucet.com)
+3. Deploy: `npx hardhat run scripts/deploy.js --network sepolia`
 
-## 安全红线
+## Security Ground Rules
 
-- 这是**教学实验合约**，不要用它发真实资产、不要收真钱。
-- 私钥只进 `.env`（已在 `.gitignore`），**绝不提交到仓库、绝不发到聊天里**。
-- 主网部署前必须经过专业审计——本仓库不做任何安全承诺。
+- This is an **educational experiment** — do not use it to tokenize real assets or accept real money.
+- Private keys go only into `.env` (already in `.gitignore`) — **never commit them, never paste them into chat**.
+- A professional audit is mandatory before any mainnet deployment — this repo makes no security claims.
 
-## 下一步可以玩的方向
+## Ideas to Explore Next
 
-- 把 `assetURI` 换成真实的 IPFS 资产档案，做"档案上链"演示
-- 加一个极简前端（ethers.js）：连接钱包 → 查余额 → 一键赎回
-- 研究 ERC-3643（合规证券代币标准），对比本合约的白名单方案
-- 写一个链下"托管人服务"脚本：监听 `Redeemed` 事件，自动记账
+- Point `assetURI` at a real IPFS asset dossier for an "on-chain dossier" demo
+- Build a minimal frontend (ethers.js): connect wallet → check balance → one-click redeem
+- Study ERC-3643 (the compliant security-token standard) and compare with this allowlist design
+- Write an off-chain "custodian service" that listens for `Redeemed` events and auto-reconciles
 
 ## License
 
